@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver GPS Sender</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    .status {
+      font-size: 1.2em;
+      color: #333;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Driver's Location Sender Active ✅</h1>
+  <p class="status">The bus's location is being sent every 5 seconds to Firebase. Keep this page open for tracking to continue.</p>
+
+  <!-- Add the script to link the driver.js -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAqo-w5cA2EPoNrsR0NGEKAlH6LzMNe5xk",
+      authDomain: "bus-tracking-system-c2fca.firebaseapp.com",
+      databaseURL: "https://bus-tracking-system-c2fca-default-rtdb.firebaseio.com",
+      projectId: "bus-tracking-system-c2fca",
+      storageBucket: "bus-tracking-system-c2fca.appspot.com",
+      messagingSenderId: "345085122440",
+      appId: "1:345085122440:web:3da665d7ff4c72af9e8c3d",
+      measurementId: "G-FK2QSPDRWG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function sendLocation(busId, lat, lng) {
+      set(ref(database, `bus_locations/${busId}`), {
+        latitude: lat,
+        longitude: lng,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    function getLocationAndSend(busId) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            console.log(`Sending GPS for ${busId}:`, lat, lng);
+            sendLocation(busId, lat, lng);
+          },
+          (error) => {
+            console.error("GPS error: ", error.message);
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    // Send location for bus1 every 5 seconds
+    setInterval(() => getLocationAndSend('bus1'), 5000);
+  </script>
+</body>
+</html>

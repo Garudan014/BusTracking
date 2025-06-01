@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Bus Tracking</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #121212;
+      color: white;
+      text-align: center;
+    }
+    header {
+      padding: 1em;
+      background: #1e1e1e;
+      font-size: 2em;
+    }
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    .back-link {
+      display: block;
+      margin: 1em;
+      color: #00ffff;
+      text-decoration: none;
+      font-size: 1.1em;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>Live Bus Tracking</header>
+  <div id="map"></div>
+  <a href="index.html" class="back-link">← Back to Home</a>
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBna_Vzfa7fCFpuN6PKEuyES6njbA4w7t4",
+  authDomain: "student-bus-tracking-sys-ad4c8.firebaseapp.com",
+  databaseURL: "https://student-bus-tracking-sys-ad4c8-default-rtdb.firebaseio.com",
+  projectId: "student-bus-tracking-sys-ad4c8",
+  storageBucket: "student-bus-tracking-sys-ad4c8.firebasestorage.app",
+  messagingSenderId: "948842879156",
+  appId: "1:948842879156:web:af50cdc94dbd4c04251fe1",
+  measurementId: "G-C688J8KQSE"
+};
+
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const map = L.map('map').setView([10.0159, 76.3419], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let busMarker;
+
+
+    function fetchBusLocation() {
+      const busRef = ref(db, 'busLocations/bus1');
+
+      get(busRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          console.log("Bus data:", data); // <-- useful debug
+
+          if (data.latitude && data.longitude) {
+            const busLatLng = [data.latitude, data.longitude];
+
+            if (busMarker) {
+              busMarker.setLatLng(busLatLng);
+            } else {
+              busMarker = L.marker(busLatLng, {
+                icon: L.icon({
+                  iconUrl: 'https://cdn-icons-png.flaticon.com/512/61/61201.png',
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 30],
+                  popupAnchor: [0, -30]
+                })
+              }).addTo(map).bindPopup("🚌 Bus Location").openPopup();
+
+              map.setView(busLatLng, 14);
+            }
+          } else {
+            console.error('Latitude or Longitude missing in database!');
+          }
+        } else {
+          console.error('No bus data found!');
+        }
+      }).catch((error) => {
+        console.error('Error getting bus location:', error);
+      });
+    }
+
+
+    fetchBusLocation();
+
+
+    setInterval(fetchBusLocation, 5000);
+  </script>
+</body>
+</html>

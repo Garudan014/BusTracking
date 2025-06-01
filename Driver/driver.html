@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bus GPS Uploader</title>
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    // Paste your actual Firebase config here:
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "XXXX",
+      appId: "XXXX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function sendLocation(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      // Upload to Firebase under 'bus1'
+      set(ref(database, 'bus_locations/bus1'), {
+        latitude: lat,
+        longitude: lon,
+        timestamp: Date.now()
+      });
+
+      document.getElementById("status").innerText =
+        `Location sent: ${lat}, ${lon}`;
+    }
+
+    function startTracking() {
+      if ("geolocation" in navigator) {
+        setInterval(() => {
+          navigator.geolocation.getCurrentPosition(sendLocation);
+        }, 5000); // every 5 seconds
+      } else {
+        alert("Geolocation not supported.");
+      }
+    }
+
+    window.onload = () => {
+      document.getElementById("start").addEventListener("click", startTracking);
+    };
+  </script>
+</head>
+<body>
+  <h1>Bus Location Tracker (Driver)</h1>
+  <button id="start">Start Sending Location</button>
+  <p id="status">Waiting to send location...</p>
+</body>
+</html>
